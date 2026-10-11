@@ -259,7 +259,7 @@ function home() {
 
   app.innerHTML = `
     <header class="top"><h1>¡Vamos! <span>Vokabeln</span></h1>
-      <button class="icon-btn" id="btnEigene" aria-label="Eigene Vokabeln">✏️</button></header>
+      <button class="btn" id="btnEigene" aria-label="Eigene Vokabeln und Scannen" style="padding:8px 12px;min-height:44px">📷 Eigene</button></header>
 
     <div class="card stats">
       <div><b>${words.length}</b><small>Wörter</small></div>
@@ -543,17 +543,80 @@ function finish() {
   $("#again").onclick = () => startSession(session.mode);
 }
 
+/* ===================== Vokabellisten erkennen (Scan / Einfügen) ===================== */
+// Wie "spanisch" bzw. "deutsch" wirkt ein Text? (für die automatische Spalten-Erkennung)
+function esScore(s) {
+  let n = 0;
+  if (/^(el|la|los|las|un|una)\s/i.test(s)) n += 2;
+  if (/[ñ¿¡áéíóú]/i.test(s)) n += 2;
+  if (/(ar|er|ir|arse|erse|irse|ción|dad|mente)\b/i.test(s)) n += 1;
+  return n;
+}
+function deScore(s) {
+  let n = 0;
+  if (/^(der|die|das|ein|eine|sich|zu)\s/i.test(s)) n += 2;
+  if (/[äöüß]/i.test(s)) n += 2;
+  if (/(^|\s)[A-ZÄÖÜ][a-zäöüß]+/.test(s)) n += 1;   // großgeschriebenes Nomen
+  if (/(en|ung|keit|heit|lich|isch)\b/.test(s)) n += 1;
+  return n;
+}
+const DE_START = /^(der|die|das|den|dem|ein|eine|sich|zu)$/i;
+
+// Eine Zeile in [links, rechts] zerlegen – mit Trennzeichen oder geraten
+function splitLine(line) {
+  const sep = line.match(/\s*(?:=|\t|\s[-–—]\s|;|\||:|\s{2,})\s*/);
+  if (sep) {
+    const i = sep.index;
+    return { a: line.slice(0, i), b: line.slice(i + sep[0].length), sure: true };
+  }
+  const t = line.split(" ");
+  if (t.length < 2) return null;
+  // Spanisch steht meist klein geschrieben links; Deutsch beginnt oft mit Artikel oder Großbuchstaben
+  for (let i = 1; i < t.length; i++) {
+    if (DE_START.test(t[i]) || /^[A-ZÄÖÜ]/.test(t[i])) return { a: t.slice(0, i).join(" "), b: t.slice(i).join(" "), sure: true };
+  }
+  if (t.length === 2) return { a: t[0], b: t[1], sure: true };
+  const m = Math.ceil(t.length / 2);
+  return { a: t.slice(0, m).join(" "), b: t.slice(m).join(" "), sure: false };
+}
+
+function parseList(text) {
+  const rows = [], skipped = [];
+  text.split(/\r?\n/).forEach(raw => {
+    const line = raw.replace(/^\s*(\d+[.)]?|[•·*▪►-])\s+/, "").replace(/\s+$/, "");
+    if (!line.trim()) return;
+    if (/^(lektion|unidad|unit|seite|página|vokabeln?)\b/i.test(line.trim()) || /^\d+$/.test(line.trim())) { skipped.push(line); return; }
+    const p = splitLine(line.trim());
+    if (!p || !p.a.trim() || !p.b.trim()) { skipped.push(line); return; }
+    rows.push({ a: p.a.trim(), b: p.b.trim(), sure: p.sure, on: true });
+  });
+  // Welche Spalte ist Spanisch? Mehrheitsentscheid über alle Zeilen
+  const vote = rows.reduce((v, r) => v + esScore(r.a) - deScore(r.a) - esScore(r.b) + deScore(r.b), 0);
+  return { rows, skipped, esLeft: vote >= 0 };
+}
+
 /* ===================== Eigene Vokabeln ===================== */
+let scan = null;   // aktuelle Vorschau
+
 function eigeneScreen() {
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   app.innerHTML = `
     <header class="top"><button class="icon-btn" id="btnBack" aria-label="Zurück">←</button><h1>Eigene Vokabeln</h1></header>
     <div class="card">
-      <p style="margin-top:0">Vokabeln aus dem Schulbuch eintragen – <b>eine pro Zeile</b>, Deutsch und Spanisch mit <b>=</b> getrennt:</p>
-      <textarea id="txt" placeholder="der Hund = el perro&#10;das Haus = la casa&#10;schnell = rápido/deprisa"></textarea>
+      <p style="margin-top:0"><b>📷 Vokabelliste scannen</b></p>
+      <ol class="hint" style="padding-left:20px;margin:0 0 10px">
+        <li>Tippe in das Feld unten${isIOS ? "" : " (auf dem iPhone)"}.</li>
+        <li>Tippe noch einmal hinein und wähle <b>„Text scannen“</b> – oder tippe auf das Scan-Symbol (Rahmen mit Textzeilen) über der Tastatur.</li>
+        <li>Halte die Kamera auf die Vokabelliste und tippe auf <b>„Einsetzen“</b>.</li>
+      </ol>
+      <p class="hint" style="margin:0 0 10px">Tipp: Am besten eine Seite mit zwei Spalten (Spanisch | Deutsch) und ohne Beispielsätze.
+      Abtippen oder Einfügen geht natürlich auch – eine Vokabel pro Zeile, z. B. <i>el perro = der Hund</i>.</p>
+      <textarea id="txt" placeholder="el perro        der Hund&#10;la casa         das Haus&#10;rápido          schnell"></textarea>
       <input type="text" id="topic" placeholder="Thema, z. B. Lektion 3" style="margin-top:10px;font-size:17px">
-      <button class="btn primary block" id="add" style="margin-top:10px">Hinzufügen</button>
+      <button class="btn primary block" id="check" style="margin-top:10px">Erkennen & Vorschau</button>
       <div id="msg" class="hint" style="margin-top:8px"></div>
     </div>
+    <div id="preview"></div>
     <h2>Bisher eingetragen (${eigene.length})</h2>
     <div class="list">${eigene.map((w, i) => `<div class="item"><div><b>${esc(show(w.es))}</b> – ${esc(show(w.de))}<br><small class="hint">${esc(w.t)}</small></div>
       <button class="icon-btn" data-del="${i}" aria-label="Löschen">🗑️</button></div>`).join("") || `<p class="hint">Noch keine.</p>`}</div>
@@ -562,13 +625,11 @@ function eigeneScreen() {
     <button class="btn block" id="wipe" style="margin-top:10px">Alle Daten auf diesem Gerät löschen</button>
     <p class="hint" style="text-align:center"><a href="datenschutz.html">Datenschutz</a></p>`;
   $("#btnBack").onclick = home;
-  $("#add").onclick = () => {
-    const t = $("#topic").value.trim() || "Eigene Vokabeln";
-    const lines = $("#txt").value.split("\n").map(l => l.split("=")).filter(p => p.length === 2 && p[0].trim() && p[1].trim());
-    lines.forEach(([de, es]) => eigene.push({ de: de.trim(), es: es.trim(), t }));
-    save();
-    eigeneScreen();
-    $("#msg").textContent = lines.length ? `${lines.length} Vokabel(n) hinzugefügt.` : "Nichts erkannt – Format: deutsch = spanisch";
+  $("#check").onclick = () => {
+    scan = parseList($("#txt").value);
+    if (!scan.rows.length) { $("#msg").textContent = "Keine Vokabeln erkannt – eine Vokabel pro Zeile, Spanisch und Deutsch nebeneinander."; return; }
+    $("#msg").textContent = "";
+    renderPreview();
   };
   app.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { eigene.splice(+b.dataset.del, 1); save(); eigeneScreen(); });
   $("#wipe").onclick = () => {
@@ -578,6 +639,46 @@ function eigeneScreen() {
     location.reload();
   };
   $("#reset").onclick = () => { if (confirm("Wirklich den ganzen Lernstand löschen?")) { progress = {}; meta = { streak: 0, lastDay: null }; save(); home(); } };
+}
+
+// Vorschau: jede Zeile prüfen, korrigieren, ab- oder anwählen
+function renderPreview() {
+  const es = r => scan.esLeft ? r.a : r.b, de = r => scan.esLeft ? r.b : r.a;
+  const n = scan.rows.filter(r => r.on).length;
+  $("#preview").innerHTML = `
+    <h2>Vorschau – bitte kurz prüfen</h2>
+    <button class="btn block" id="swap" style="margin-bottom:10px">⇄ Spalten tauschen (Spanisch ↔ Deutsch)</button>
+    <div class="list">
+      <div class="item" style="font-weight:600"><span style="width:24px"></span><div>Spanisch</div><div>Deutsch</div></div>
+      ${scan.rows.map((r, i) => `
+        <div class="item" style="${r.sure ? "" : "border-color:var(--warn);background:var(--warn-soft)"}">
+          <input type="checkbox" data-on="${i}" ${r.on ? "checked" : ""} style="width:22px;height:22px;flex:none">
+          <div><input type="text" data-es="${i}" value="${esc(es(r))}" lang="es" style="font-size:16px;padding:8px"></div>
+          <div><input type="text" data-de="${i}" value="${esc(de(r))}" lang="de" style="font-size:16px;padding:8px"></div>
+        </div>`).join("")}
+    </div>
+    ${scan.rows.some(r => !r.sure) ? `<p class="hint">Gelb markiert: hier war die Trennung unsicher – bitte prüfen.</p>` : ""}
+    ${scan.skipped.length ? `<p class="hint">Übersprungen (${scan.skipped.length}): ${scan.skipped.map(esc).join(" · ")}</p>` : ""}
+    <button class="btn primary block" id="add" style="margin-top:10px">${n} Vokabel(n) übernehmen</button>`;
+  const sync = () => app.querySelectorAll("[data-es]").forEach(inp => {
+    const r = scan.rows[inp.dataset.es], d = app.querySelector(`[data-de="${inp.dataset.es}"]`).value;
+    if (scan.esLeft) { r.a = inp.value; r.b = d; } else { r.b = inp.value; r.a = d; }
+  });
+  $("#swap").onclick = () => { sync(); scan.esLeft = !scan.esLeft; renderPreview(); };
+  app.querySelectorAll("[data-on]").forEach(c => c.onchange = () => {
+    scan.rows[c.dataset.on].on = c.checked;
+    $("#add").textContent = `${scan.rows.filter(r => r.on).length} Vokabel(n) übernehmen`;
+  });
+  $("#add").onclick = () => {
+    sync();
+    const t = $("#topic").value.trim() || "Eigene Vokabeln";
+    const neu = scan.rows.filter(r => r.on && r.a.trim() && r.b.trim())
+      .map(r => ({ es: (scan.esLeft ? r.a : r.b).trim(), de: (scan.esLeft ? r.b : r.a).trim(), t }));
+    eigene.push(...neu);
+    save(); scan = null;
+    eigeneScreen();
+    $("#msg").textContent = `${neu.length} Vokabel(n) unter „${t}“ gespeichert.`;
+  };
 }
 
 /* ===================== Start ===================== */

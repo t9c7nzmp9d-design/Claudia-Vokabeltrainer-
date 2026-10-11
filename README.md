@@ -10,7 +10,8 @@ Läuft im Browser und lässt sich auf dem iPhone über Safari → „Teilen“ �
 - **Lernkartei (Leitner-System):** Wörter kommen nach 1, 2, 4, 7, 14 Tagen wieder; falsch → zurück an den Anfang
 - Fehlertolerante Prüfung: fehlender Akzent = „fast richtig“, Tippfehler wird erkannt, Artikel optional, mehrere richtige Lösungen
 - Themenauswahl, Lernrichtung DE→ES / ES→DE, Fortschritt, Lernserie (🔥 Tage)
-- **Eigene Vokabeln** aus dem Schulbuch eintragen (`deutsch = spanisch`, eine pro Zeile)
+- **Vokabellisten scannen:** über „Text scannen“ des iPhones (Live Text, läuft auf dem Gerät) – die App trennt Spanisch/Deutsch automatisch, erkennt die Spaltenreihenfolge und zeigt eine Vorschau zum Korrigieren
+- **Eigene Vokabeln** abtippen oder einfügen (eine pro Zeile, z. B. `el perro = der Hund`)
 
 ## Dateien
 | Datei | Inhalt |
