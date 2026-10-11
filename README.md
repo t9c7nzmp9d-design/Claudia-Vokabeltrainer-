@@ -17,7 +17,8 @@ Läuft im Browser und lässt sich auf dem iPhone über Safari → „Teilen“ �
 | Datei | Inhalt |
 |---|---|
 | `index.html` | die komplette App |
-| `vokabeln.js` | Wortschatz (leicht erweiterbar) |
+| `grundwortschatz.js` | Grundwortschatz Lernjahr 1 & 2 (ca. 270 Wörter, 18 Themen) |
+| `vokabeln.js` | Wortschatz Lernjahr 3+ (leicht erweiterbar) |
 | `datenschutz.html` | Datenschutzhinweise, Widerruf der Spracherkennung, Daten löschen |
 | `manifest.json`, `sw.js`, `icons/` | Installierbarkeit & Offline-Betrieb |
 
@@ -31,7 +32,7 @@ python3 -m http.server 8000
 - **Sprachvariante:** Spanisch aus Spanien (Stimme & Spracherkennung `es-ES`, Wortschatz z. B. *móvil*, *piso*, *deberes*)
 - **Hosting:** GitHub Pages aus dem Branch `main`
 - **Speicherung:** Lernstand nur auf dem jeweiligen Gerät (kein Konto, kein Server)
-- **Offen:** Wortschatz passend zum Schulbuch (Lehrwerk & Lektion folgen)
+- **Lehrwerk:** *Encuentros hoy* 1 & 2 (Cornelsen). Der eingebaute Grundwortschatz ist eine eigene Zusammenstellung, thematisch angelehnt – **keine Kopie der Buchlisten** (Urheberrecht). Die exakten Buchvokabeln werden privat auf dem Gerät eingescannt („📷 Eigene“).
 - **Später:** Verbkonjugation, weitere Sprachen
 
 ## Datenschutz

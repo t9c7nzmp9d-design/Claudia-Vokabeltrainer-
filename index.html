@@ -69,6 +69,8 @@
   .chip small { opacity: .7; }
   .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px; }
   .seg button { padding: 10px; border-radius: 10px; font-weight: 600; }
+  .seg5 { grid-template-columns: repeat(5, 1fr); }
+  .seg5 button { padding: 10px 2px; font-size: 14px; }
   .seg button[aria-pressed="true"] { background: var(--brand); color: #fff; }
   .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .mode { text-align: left; padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
@@ -119,6 +121,7 @@
 <body>
 <main id="app"></main>
 
+<script src="grundwortschatz.js"></script>
 <script src="vokabeln.js"></script>
 <script>
 "use strict";
@@ -144,9 +147,15 @@ const save = () => {
   store.set("vt-settings", settings); store.set("vt-meta", meta);
 };
 
-const allWords = () => [...VOKABELN, ...eigene.map(w => ({ ...w, t: w.t || "Eigene Vokabeln" }))]
-  .map(w => ({ ...w, id: w.de + "→" + w.es }));
-const topics = () => [...new Set(allWords().map(w => w.t))];
+// lv = Lernjahr: 1, 2, 3 (= 3+) oder "E" (eigene Vokabeln)
+const allWords = () => [
+  ...GRUNDWORTSCHATZ,
+  ...VOKABELN.map(w => ({ lv: 3, ...w })),
+  ...eigene.map(w => ({ ...w, lv: "E", t: w.t || "Eigene Vokabeln" }))
+].map(w => ({ ...w, id: w.de + "→" + w.es }));
+const LEVELS = [["alle", "Alle"], [1, "Jahr 1"], [2, "Jahr 2"], [3, "Jahr 3+"], ["E", "Eigene"]];
+const inLevel = w => !settings.level || settings.level === "alle" || w.lv === settings.level;
+const topics = () => [...new Set(allWords().filter(inLevel).map(w => w.t))];
 
 /* ===================== Leitner-System ===================== */
 // Box 0 = neu, Box 5 = sicher. Abstände in Tagen bis zur nächsten Wiederholung:
@@ -174,7 +183,7 @@ const isLearned = w => progress[w.id] && progress[w.id].box >= 4;
 
 function selectedWords() {
   const sel = settings.topics.filter(t => topics().includes(t));
-  return allWords().filter(w => !sel.length || sel.includes(w.t));
+  return allWords().filter(w => inLevel(w) && (!sel.length || sel.includes(w.t)));
 }
 
 function buildSession() {
@@ -191,7 +200,7 @@ function buildSession() {
 const stripAccents = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
 const ARTICLES = /^(el|la|los|las|un|una|unos|unas|der|die|das|ein|eine|sich)\s+/;
 function norm(s) {
-  return s.toLowerCase().replace(/\(.*?\)/g, "").replace(/[¿?¡!.,;:"']/g, "")
+  return s.toLowerCase().replace(/\(.*?\)/g, "").replace(/[¿?¡!.,;:"'…]/g, "")
     .replace(/\s+/g, " ").trim().replace(ARTICLES, "");
 }
 function levenshtein(a, b) {
@@ -275,6 +284,11 @@ function home() {
       <button data-dir="es-de" aria-pressed="${settings.dir === "es-de"}">Spanisch → Deutsch</button>
     </div>
 
+    <h2>Lernjahr</h2>
+    <div class="seg seg5">
+      ${LEVELS.map(([v, l]) => `<button data-level="${v}" aria-pressed="${String(settings.level || "alle") === String(v)}">${l}</button>`).join("")}
+    </div>
+
     <h2>Themen <small style="text-transform:none">(nichts gewählt = alle)</small></h2>
     <div class="chips">
       ${topics().map(t => {
@@ -299,6 +313,11 @@ function home() {
       <a href="datenschutz.html">Datenschutz</a></footer>
   `;
 
+  app.querySelectorAll("[data-level]").forEach(b => b.onclick = () => {
+    const v = b.dataset.level;
+    settings.level = /^\d$/.test(v) ? +v : v;
+    save(); home();
+  });
   app.querySelectorAll("[data-dir]").forEach(b => b.onclick = () => { settings.dir = b.dataset.dir; save(); home(); });
   app.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => {
     const t = b.dataset.topic;
