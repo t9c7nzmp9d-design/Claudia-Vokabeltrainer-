@@ -51,7 +51,7 @@
       <li>Die Seite fragt <b>keine persönlichen Daten</b> ab: kein Name, keine E-Mail, kein Konto.</li>
       <li>Der Lernstand wird <b>nur auf deinem Gerät</b> gespeichert und nie an uns übertragen.</li>
       <li>Es werden <b>keine Inhalte von fremden Servern</b> geladen: keine Google Fonts, keine Analyse-Dienste, keine Social-Media-Buttons.</li>
-      <li>Die <b>Spracherkennung ist standardmäßig aus</b> und läuft nur, wenn du sie selbst einschaltest.</li>
+      <li>Für <b>Vorlesen und Spracherkennung</b> nutzt die App die Sprachdienste deines Browsers (z. B. Apple oder Google) – siehe Punkt 4.</li>
     </ul>
   </div>
 
@@ -87,7 +87,7 @@
   <ul>
     <li>deinen Lernstand (welche Wörter du wie oft gewusst hast),</li>
     <li>deine selbst eingetragenen Vokabeln,</li>
-    <li>deine Einstellungen (Lernrichtung, Themen, Spracherkennung an/aus).</li>
+    <li>deine Einstellungen (Lernrichtung, Themen).</li>
   </ul>
   <p>
     Zusätzlich speichert ein sogenannter Service Worker die Programmdateien zwischen, damit die App auch offline läuft.
@@ -97,19 +97,25 @@
 
   <h2 id="sprache">4. Sprachausgabe und Spracheingabe</h2>
   <p>
-    <b>Vorlesen (Sprachausgabe):</b> Die App benutzt nur Stimmen, die <b>direkt auf deinem Gerät</b> installiert sind.
-    Der vorgelesene Text verlässt dein Gerät nicht.
+    Für Vorlesen und Spracherkennung verwendet die App die <b>Sprachfunktionen deines Browsers</b>. Die Seite selbst
+    überträgt dabei nichts an uns und speichert nichts.
   </p>
   <p>
-    <b>Spracherkennung im Browser:</b> Sie ist <b>ausgeschaltet</b>, bis du sie selbst einschaltest. Ist sie an und
-    tippst du auf das Mikrofon, nimmt dein Browser das gesprochene Wort auf und schickt es zur Auswertung an
-    seinen Hersteller (bei Safari an <b>Apple</b>, bei Chrome an <b>Google</b>). Die Seite selbst bekommt nur den
-    erkannten Text, prüft ihn sofort und speichert ihn nicht. Rechtsgrundlage ist deine Einwilligung
-    (Art. 6 Abs. 1 lit. a DSGVO). Du kannst sie jederzeit widerrufen: unten auf dieser Seite oder in der App über ✏️ → „Einstellungen & Daten“.
+    <b>Vorlesen (Sprachausgabe):</b> Auf dem iPhone kommen die Stimmen von Apple und laufen auf dem Gerät.
+    In Chrome werden bevorzugt die <b>Google-Stimmen</b> verwendet. Dabei schickt Chrome das vorzulesende spanische Wort
+    an Google, um die Sprachausgabe zu erzeugen.
   </p>
   <p>
-    <b>Ohne Spracherkennung</b> kannst du die Antwort eintippen oder das Diktier-Mikrofon der iPhone-Tastatur nutzen.
-    Das ist eine Funktion deines Geräts, für die Apples Einstellungen gelten.
+    <b>Spracherkennung:</b> Nur wenn du auf das 🎤-Mikrofon tippst, nimmt dein Browser das gesprochene Wort auf und schickt es
+    zur Auswertung an seinen Hersteller (bei Safari an <b>Apple</b>, bei Chrome an <b>Google</b>). Die Seite bekommt nur den
+    erkannten Text, prüft ihn sofort und speichert ihn nicht. Beim ersten Mal fragt dein Gerät um Erlaubnis für das Mikrofon.
+    Diese Erlaubnis kannst du in den Einstellungen deines Geräts bzw. Browsers jederzeit wieder entziehen.
+  </p>
+  <p>
+    Wenn du das nicht möchtest, kannst du einfach das Mikrofon nicht benutzen und die Antworten eintippen.
+    Für die Verarbeitung gelten die Datenschutzbestimmungen von
+    <a href="https://www.apple.com/de/legal/privacy/" rel="noopener">Apple</a> bzw.
+    <a href="https://policies.google.com/privacy?hl=de" rel="noopener">Google</a>.
   </p>
 
   <h2>5. Deine Rechte</h2>
@@ -122,9 +128,7 @@
 
   <h2>6. Daten auf diesem Gerät verwalten</h2>
   <div class="card">
-    <p style="margin:0">Spracherkennung: <b id="micState">–</b></p>
-    <button id="micOff">Spracherkennung ausschalten (Einwilligung widerrufen)</button>
-    <button id="wipe">Alle Daten dieser App auf diesem Gerät löschen</button>
+    <button id="wipe" style="margin-top:0">Alle Daten dieser App auf diesem Gerät löschen</button>
     <p id="msg" class="muted" style="margin-bottom:0"></p>
   </div>
 
@@ -133,20 +137,10 @@
 
 <script>
   const KEYS = ["vt-progress", "vt-eigene", "vt-settings", "vt-meta"];
-  const read = () => { try { return JSON.parse(localStorage.getItem("vt-settings")) || {}; } catch { return {}; } };
-  const state = () => { document.getElementById("micState").textContent = read().micOk ? "eingeschaltet" : "ausgeschaltet"; };
-  state();
-  document.getElementById("micOff").onclick = () => {
-    const s = read(); s.micOk = false;
-    try { localStorage.setItem("vt-settings", JSON.stringify(s)); } catch {}
-    state();
-    document.getElementById("msg").textContent = "Spracherkennung ist ausgeschaltet.";
-  };
   document.getElementById("wipe").onclick = () => {
     if (!confirm("Wirklich alles löschen – Lernstand, eigene Vokabeln und Einstellungen?")) return;
     KEYS.forEach(k => { try { localStorage.removeItem(k); } catch {} });
     if (window.caches) caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
-    state();
     document.getElementById("msg").textContent = "Alle Daten dieser App wurden von diesem Gerät gelöscht.";
   };
 </script>

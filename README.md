@@ -36,6 +36,5 @@ python3 -m http.server 8000
 ## Datenschutz
 Private, nicht-kommerzielle Seite – kein Tracking, keine Cookies, keine externen Ressourcen, kein Konto.
 - Lernstand nur im `localStorage` des Geräts; „Alle Daten löschen“ in der App und auf der Datenschutzseite
-- Sprachausgabe nur mit Stimmen, die auf dem Gerät laufen (`localService`)
-- Spracherkennung im Browser (Audio geht an Apple/Google) ist **aus**, bis sie aktiv eingeschaltet wird
+- Vorlesen & Spracherkennung über die Browser-Dienste (iPhone: Apple; Chrome: bevorzugt Google-Stimmen) – auf der Datenschutzseite erklärt
 - `noindex`: die Seite wird nicht in Suchmaschinen aufgenommen
