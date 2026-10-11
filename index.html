@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>¡Vamos! Vokabeltrainer</title>
 <meta name="description" content="Spanisch-Vokabeltrainer mit Sprachausgabe und Spracheingabe">
+<meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#c62828">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -215,7 +216,9 @@ function check(input, solution) {
 let esVoice = null;
 function pickVoice() {
   const voices = speechSynthesis.getVoices();
-  esVoice = voices.find(v => v.lang === "es-ES") || voices.find(v => v.lang.startsWith("es")) || null;
+  // Nur Stimmen, die direkt auf dem Gerät laufen – der Text wird nicht ins Internet geschickt
+  const local = voices.filter(v => v.localService);
+  esVoice = local.find(v => v.lang === "es-ES") || local.find(v => v.lang.startsWith("es")) || null;
 }
 if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 
@@ -224,7 +227,7 @@ function speak(text, lang = "es-ES") {
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text.split("/")[0]);
   u.lang = lang; u.rate = settings.rate;
-  if (lang.startsWith("es") && esVoice) u.voice = esVoice;
+  if (lang.startsWith("es")) { if (!esVoice) return; u.voice = esVoice; }
   speechSynthesis.speak(u);
 }
 
@@ -289,6 +292,9 @@ function home() {
       <button class="mode" data-mode="mix"><div class="e">🎲</div><b>Mix</b><small>Alles gemischt</small></button>
     </div>
     <p class="hint" style="text-align:center;margin-top:18px">Tipp: In Safari „Teilen“ → „Zum Home-Bildschirm“ – dann läuft der Trainer wie eine App.</p>
+    <footer class="hint" style="text-align:center;margin-top:24px;font-size:13px">
+      Private, nicht-kommerzielle Seite · keine Werbung, kein Tracking, keine Cookies<br>
+      <a href="datenschutz.html">Datenschutz</a></footer>
   `;
 
   app.querySelectorAll("[data-dir]").forEach(b => b.onclick = () => { settings.dir = b.dataset.dir; save(); home(); });
@@ -475,7 +481,15 @@ function renderQuestion(word, mode) {
   if (mode === "sprechen") {
     frame(`${promptCard}
       <div class="card quiz" id="speakCard">
-        ${Recognition ? `
+        ${Recognition && !settings.micOk ? `
+          <div class="hint" style="text-align:left">
+            <b>Spracherkennung im Browser ist ausgeschaltet.</b><br>
+            Wenn du sie einschaltest, schickt der Browser deine Aufnahme zur Auswertung an seinen Hersteller
+            (Safari → Apple, Chrome → Google). Diese Seite selbst speichert nichts davon.
+            <a href="datenschutz.html#sprache">Mehr dazu</a><br><br>
+            Ohne Einschalten: ins Feld tippen oder das 🎤 der iPhone-Tastatur nutzen.
+          </div>
+          <button class="btn block" id="micOn" style="margin-top:10px">Spracherkennung einschalten</button>` : Recognition ? `
           <button class="mic" id="mic" aria-label="Sprechen">🎤</button>
           <div class="hint" id="micHint">Tippe aufs Mikrofon und sag das Wort auf Spanisch.</div>` : `
           <div class="hint">Die Spracherkennung wird von diesem Browser nicht direkt unterstützt.<br>
@@ -497,7 +511,8 @@ function renderQuestion(word, mode) {
     };
     $("#f").onsubmit = e => { e.preventDefault(); if ($("#weiter")) return $("#weiter").click(); evaluate([inp.value]); };
     $("#skip").onclick = () => evaluate([""]);
-    if (Recognition) {
+    if ($("#micOn")) $("#micOn").onclick = () => { settings.micOk = true; save(); renderQuestion(word, mode); };
+    if ($("#mic")) {
       $("#mic").onclick = () => {
         const mic = $("#mic"); mic.classList.add("listening"); $("#micHint").textContent = "Ich höre zu …";
         try {
@@ -550,8 +565,16 @@ function eigeneScreen() {
     <h2>Bisher eingetragen (${eigene.length})</h2>
     <div class="list">${eigene.map((w, i) => `<div class="item"><div><b>${esc(show(w.es))}</b> – ${esc(show(w.de))}<br><small class="hint">${esc(w.t)}</small></div>
       <button class="icon-btn" data-del="${i}" aria-label="Löschen">🗑️</button></div>`).join("") || `<p class="hint">Noch keine.</p>`}</div>
-    <h2>Fortschritt</h2>
-    <button class="btn block" id="reset">Lernstand zurücksetzen</button>`;
+    <h2>Einstellungen & Daten</h2>
+    <div class="card">
+      <label class="row" style="justify-content:space-between">
+        <span>Spracherkennung im Browser<br><small class="hint">Aufnahme geht an Apple bzw. Google</small></span>
+        <input type="checkbox" id="micToggle" ${settings.micOk ? "checked" : ""} style="width:24px;height:24px">
+      </label>
+    </div>
+    <button class="btn block" id="reset">Lernstand zurücksetzen</button>
+    <button class="btn block" id="wipe" style="margin-top:10px">Alle Daten auf diesem Gerät löschen</button>
+    <p class="hint" style="text-align:center"><a href="datenschutz.html">Datenschutz</a></p>`;
   $("#btnBack").onclick = home;
   $("#add").onclick = () => {
     const t = $("#topic").value.trim() || "Eigene Vokabeln";
@@ -562,6 +585,13 @@ function eigeneScreen() {
     $("#msg").textContent = lines.length ? `${lines.length} Vokabel(n) hinzugefügt.` : "Nichts erkannt – Format: deutsch = spanisch";
   };
   app.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { eigene.splice(+b.dataset.del, 1); save(); eigeneScreen(); });
+  $("#micToggle").onchange = e => { settings.micOk = e.target.checked; save(); };
+  $("#wipe").onclick = () => {
+    if (!confirm("Wirklich alles löschen – Lernstand, eigene Vokabeln und Einstellungen?")) return;
+    ["vt-progress", "vt-eigene", "vt-settings", "vt-meta"].forEach(k => { try { localStorage.removeItem(k); } catch {} });
+    if (window.caches) caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
+    location.reload();
+  };
   $("#reset").onclick = () => { if (confirm("Wirklich den ganzen Lernstand löschen?")) { progress = {}; meta = { streak: 0, lastDay: null }; save(); home(); } };
 }
 

@@ -17,6 +17,7 @@ Läuft im Browser und lässt sich auf dem iPhone über Safari → „Teilen“ �
 |---|---|
 | `index.html` | die komplette App |
 | `vokabeln.js` | Wortschatz (leicht erweiterbar) |
+| `datenschutz.html` | Datenschutzhinweise, Widerruf der Spracherkennung, Daten löschen |
 | `manifest.json`, `sw.js`, `icons/` | Installierbarkeit & Offline-Betrieb |
 
 ## Lokal testen
@@ -31,3 +32,10 @@ python3 -m http.server 8000
 - **Speicherung:** Lernstand nur auf dem jeweiligen Gerät (kein Konto, kein Server)
 - **Offen:** Wortschatz passend zum Schulbuch (Lehrwerk & Lektion folgen)
 - **Später:** Verbkonjugation, weitere Sprachen
+
+## Datenschutz
+Private, nicht-kommerzielle Seite – kein Tracking, keine Cookies, keine externen Ressourcen, kein Konto.
+- Lernstand nur im `localStorage` des Geräts; „Alle Daten löschen“ in der App und auf der Datenschutzseite
+- Sprachausgabe nur mit Stimmen, die auf dem Gerät laufen (`localService`)
+- Spracherkennung im Browser (Audio geht an Apple/Google) ist **aus**, bis sie aktiv eingeschaltet wird
+- `noindex`: die Seite wird nicht in Suchmaschinen aufgenommen
