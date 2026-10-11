@@ -1,0 +1,102 @@
+// Beispiel-Wortschatz Spanisch (ca. 3.–4. Lernjahr, Klasse 9).
+// Mehrere richtige Antworten mit "/" trennen. "ej" = Beispielsatz (optional).
+// Später ersetzbar durch die Lektionen aus dem eigenen Schulbuch.
+const VOKABELN = [
+  // --- Alltag & Familie ---
+  { t: "Alltag & Familie", de: "aufstehen", es: "levantarse", ej: "Me levanto a las siete." },
+  { t: "Alltag & Familie", de: "sich duschen", es: "ducharse" },
+  { t: "Alltag & Familie", de: "frühstücken", es: "desayunar" },
+  { t: "Alltag & Familie", de: "die Geschwister", es: "los hermanos" },
+  { t: "Alltag & Familie", de: "der Cousin", es: "el primo" },
+  { t: "Alltag & Familie", de: "die Großeltern", es: "los abuelos" },
+  { t: "Alltag & Familie", de: "sich streiten", es: "pelearse/discutir" },
+  { t: "Alltag & Familie", de: "sich verstehen mit", es: "llevarse bien con", ej: "Me llevo bien con mi hermana." },
+  { t: "Alltag & Familie", de: "die Wohnung", es: "el piso/el apartamento" },
+  { t: "Alltag & Familie", de: "aufräumen", es: "ordenar" },
+  { t: "Alltag & Familie", de: "manchmal", es: "a veces" },
+  { t: "Alltag & Familie", de: "normalerweise", es: "normalmente" },
+
+  // --- Schule ---
+  { t: "Schule", de: "das Fach", es: "la asignatura" },
+  { t: "Schule", de: "die Note", es: "la nota" },
+  { t: "Schule", de: "die Klassenarbeit", es: "el examen" },
+  { t: "Schule", de: "bestehen (Prüfung)", es: "aprobar" },
+  { t: "Schule", de: "durchfallen", es: "suspender" },
+  { t: "Schule", de: "die Hausaufgaben", es: "los deberes" },
+  { t: "Schule", de: "der Schüler", es: "el alumno" },
+  { t: "Schule", de: "lernen", es: "aprender/estudiar" },
+  { t: "Schule", de: "erklären", es: "explicar" },
+  { t: "Schule", de: "die Pause", es: "el recreo" },
+  { t: "Schule", de: "streng", es: "estricto" },
+  { t: "Schule", de: "schwierig", es: "difícil" },
+
+  // --- Freizeit ---
+  { t: "Freizeit", de: "die Freizeit", es: "el tiempo libre" },
+  { t: "Freizeit", de: "ausgehen", es: "salir" },
+  { t: "Freizeit", de: "sich treffen mit", es: "quedar con", ej: "He quedado con mis amigos." },
+  { t: "Freizeit", de: "das Konzert", es: "el concierto" },
+  { t: "Freizeit", de: "Sport treiben", es: "hacer deporte" },
+  { t: "Freizeit", de: "die Mannschaft", es: "el equipo" },
+  { t: "Freizeit", de: "gewinnen", es: "ganar" },
+  { t: "Freizeit", de: "verlieren", es: "perder" },
+  { t: "Freizeit", de: "das Handy", es: "el móvil" },
+  { t: "Freizeit", de: "herunterladen", es: "descargar" },
+  { t: "Freizeit", de: "die sozialen Netzwerke", es: "las redes sociales" },
+  { t: "Freizeit", de: "Lust haben auf", es: "tener ganas de" },
+
+  // --- Essen & Einkaufen ---
+  { t: "Essen & Einkaufen", de: "das Mittagessen", es: "la comida/el almuerzo" },
+  { t: "Essen & Einkaufen", de: "das Abendessen", es: "la cena" },
+  { t: "Essen & Einkaufen", de: "die Rechnung", es: "la cuenta" },
+  { t: "Essen & Einkaufen", de: "bestellen", es: "pedir" },
+  { t: "Essen & Einkaufen", de: "lecker", es: "rico/delicioso" },
+  { t: "Essen & Einkaufen", de: "das Gemüse", es: "la verdura" },
+  { t: "Essen & Einkaufen", de: "das Obst", es: "la fruta" },
+  { t: "Essen & Einkaufen", de: "kosten", es: "costar", ej: "¿Cuánto cuesta?" },
+  { t: "Essen & Einkaufen", de: "teuer", es: "caro" },
+  { t: "Essen & Einkaufen", de: "billig", es: "barato" },
+  { t: "Essen & Einkaufen", de: "anprobieren", es: "probarse" },
+  { t: "Essen & Einkaufen", de: "die Größe (Kleidung)", es: "la talla" },
+
+  // --- Reisen & Stadt ---
+  { t: "Reisen & Stadt", de: "die Reise", es: "el viaje" },
+  { t: "Reisen & Stadt", de: "der Flughafen", es: "el aeropuerto" },
+  { t: "Reisen & Stadt", de: "der Bahnhof", es: "la estación" },
+  { t: "Reisen & Stadt", de: "die Unterkunft", es: "el alojamiento" },
+  { t: "Reisen & Stadt", de: "der Koffer", es: "la maleta" },
+  { t: "Reisen & Stadt", de: "geradeaus", es: "todo recto" },
+  { t: "Reisen & Stadt", de: "abbiegen", es: "girar/doblar" },
+  { t: "Reisen & Stadt", de: "in der Nähe von", es: "cerca de" },
+  { t: "Reisen & Stadt", de: "weit weg von", es: "lejos de" },
+  { t: "Reisen & Stadt", de: "die Sehenswürdigkeit", es: "el monumento/el lugar de interés" },
+  { t: "Reisen & Stadt", de: "der Strand", es: "la playa" },
+  { t: "Reisen & Stadt", de: "das Wetter", es: "el tiempo", ej: "Hace buen tiempo." },
+
+  // --- Gefühle & Meinung ---
+  { t: "Gefühle & Meinung", de: "ich finde, dass", es: "creo que/pienso que" },
+  { t: "Gefühle & Meinung", de: "meiner Meinung nach", es: "en mi opinión/para mí" },
+  { t: "Gefühle & Meinung", de: "nervös", es: "nervioso" },
+  { t: "Gefühle & Meinung", de: "enttäuscht", es: "decepcionado" },
+  { t: "Gefühle & Meinung", de: "stolz", es: "orgulloso" },
+  { t: "Gefühle & Meinung", de: "sich Sorgen machen", es: "preocuparse" },
+  { t: "Gefühle & Meinung", de: "sich freuen", es: "alegrarse" },
+  { t: "Gefühle & Meinung", de: "wütend", es: "enfadado" },
+  { t: "Gefühle & Meinung", de: "zustimmen", es: "estar de acuerdo" },
+  { t: "Gefühle & Meinung", de: "die Zukunft", es: "el futuro" },
+  { t: "Gefühle & Meinung", de: "der Traum", es: "el sueño" },
+  { t: "Gefühle & Meinung", de: "hoffen", es: "esperar" },
+
+  // --- Wichtige Verben (unregelmäßig) ---
+  { t: "Unregelmäßige Verben", de: "ich habe gemacht (hacer, Perfekt)", es: "he hecho" },
+  { t: "Unregelmäßige Verben", de: "ich habe gesagt (decir, Perfekt)", es: "he dicho" },
+  { t: "Unregelmäßige Verben", de: "ich habe gesehen (ver, Perfekt)", es: "he visto" },
+  { t: "Unregelmäßige Verben", de: "ich habe geschrieben (escribir, Perfekt)", es: "he escrito" },
+  { t: "Unregelmäßige Verben", de: "ich ging / ich war (ir/ser, Indefinido)", es: "fui" },
+  { t: "Unregelmäßige Verben", de: "ich hatte (tener, Indefinido)", es: "tuve" },
+  { t: "Unregelmäßige Verben", de: "ich machte (hacer, Indefinido)", es: "hice" },
+  { t: "Unregelmäßige Verben", de: "ich konnte (poder, Indefinido)", es: "pude" },
+  { t: "Unregelmäßige Verben", de: "er/sie war (estar, Indefinido)", es: "estuvo" },
+  { t: "Unregelmäßige Verben", de: "ich wollte (querer, Indefinido)", es: "quise" },
+  { t: "Unregelmäßige Verben", de: "wir sagten (decir, Indefinido)", es: "dijimos" },
+  { t: "Unregelmäßige Verben", de: "ich brachte (traer, Indefinido)", es: "traje" }
+];

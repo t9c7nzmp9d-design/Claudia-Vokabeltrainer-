@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¡Vamos! Vokabeltrainer</title>
+<meta name="description" content="Spanisch-Vokabeltrainer mit Sprachausgabe und Spracheingabe">
+<meta name="theme-color" content="#c62828">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Vokabeln">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root {
+    --bg: #fdf8f2; --card: #ffffff; --text: #2a2321; --muted: #7a6f6a;
+    --line: #eadfd4; --brand: #c62828; --brand-soft: #fde7e4; --gold: #f6b819;
+    --ok: #2e7d32; --ok-soft: #e3f3e4; --bad: #c62828; --bad-soft: #fde7e4;
+    --warn: #a86b00; --warn-soft: #fff1d1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1716; --card: #26201e; --text: #f3ece8; --muted: #b0a49e;
+      --line: #3a312e; --brand: #ef5350; --brand-soft: #3d2423; --gold: #f6b819;
+      --ok: #66bb6a; --ok-soft: #1f3321; --bad: #ef5350; --bad-soft: #3d2423;
+      --warn: #ffca5c; --warn-soft: #3a2f17;
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    min-height: 100vh;
+  }
+  main { max-width: 560px; margin: 0 auto; padding: 16px; }
+  header.top { display: flex; align-items: center; gap: 10px; margin: 4px 0 16px; }
+  header.top h1 { font-size: 24px; margin: 0; flex: 1; }
+  header.top h1 span { color: var(--brand); }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 18px; border-radius: 14px; font-weight: 600;
+    background: var(--card); border: 1px solid var(--line); min-height: 48px;
+  }
+  .btn.primary { background: var(--brand); color: #fff; border-color: transparent; }
+  .btn.ok { background: var(--ok); color: #fff; border-color: transparent; }
+  .btn.bad { background: var(--bad); color: #fff; border-color: transparent; }
+  .btn.block { width: 100%; }
+  .btn:disabled { opacity: .5; }
+  .icon-btn {
+    width: 44px; height: 44px; border-radius: 50%; display: inline-grid; place-items: center;
+    background: var(--card); border: 1px solid var(--line); font-size: 20px; flex: none;
+  }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px; margin-bottom: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; }
+  .stats b { display: block; font-size: 22px; }
+  .stats small { color: var(--muted); font-size: 12px; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 18px 4px 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card);
+    font-size: 15px;
+  }
+  .chip[aria-pressed="true"] { background: var(--brand-soft); border-color: var(--brand); color: var(--brand); font-weight: 600; }
+  .chip small { opacity: .7; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px; }
+  .seg button { padding: 10px; border-radius: 10px; font-weight: 600; }
+  .seg button[aria-pressed="true"] { background: var(--brand); color: #fff; }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mode { text-align: left; padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+  .mode .e { font-size: 26px; }
+  .mode b { display: block; margin-top: 4px; }
+  .mode small { color: var(--muted); font-size: 13px; }
+  .progress { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; flex: 1; }
+  .progress i { display: block; height: 100%; background: var(--gold); transition: width .3s; }
+  .quiz { text-align: center; padding: 26px 18px; }
+  .quiz .label { color: var(--muted); font-size: 14px; }
+  .quiz .word { font-size: 30px; font-weight: 700; margin: 8px 0; word-break: break-word; }
+  .quiz .answer { font-size: 24px; font-weight: 600; color: var(--brand); margin-top: 6px; }
+  .quiz .ej { color: var(--muted); font-style: italic; margin-top: 8px; }
+  input[type=text], textarea, select {
+    width: 100%; font: inherit; font-size: 20px; padding: 13px 14px; border-radius: 14px;
+    border: 2px solid var(--line); background: var(--card); color: var(--text); outline: none;
+  }
+  textarea { font-size: 16px; min-height: 140px; }
+  input[type=text]:focus, textarea:focus { border-color: var(--brand); }
+  .accents { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 10px 0; }
+  .accents button { width: 40px; height: 40px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font-size: 18px; }
+  .feedback { border-radius: 14px; padding: 12px 14px; margin: 12px 0; font-weight: 600; }
+  .feedback.ok { background: var(--ok-soft); color: var(--ok); }
+  .feedback.bad { background: var(--bad-soft); color: var(--bad); }
+  .feedback.warn { background: var(--warn-soft); color: var(--warn); }
+  .feedback span { font-weight: 400; color: var(--text); display: block; margin-top: 2px; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .row > .btn { flex: 1; }
+  .choices { display: grid; gap: 10px; }
+  .choices .btn { justify-content: flex-start; text-align: left; }
+  .choices .btn.right { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+  .choices .btn.wrong { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+  .mic {
+    width: 96px; height: 96px; border-radius: 50%; font-size: 40px; margin: 10px auto; display: grid; place-items: center;
+    background: var(--brand); color: #fff; box-shadow: 0 6px 18px rgba(198,40,40,.3);
+  }
+  .mic.listening { animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { transform: scale(1.08); box-shadow: 0 0 0 14px rgba(198,40,40,.15); } }
+  .hint { color: var(--muted); font-size: 14px; }
+  .list { display: grid; gap: 6px; }
+  .list .item { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+  .list .item div { flex: 1; }
+  .hidden { display: none !important; }
+  .big-emoji { font-size: 60px; text-align: center; }
+  a { color: var(--brand); }
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script src="vokabeln.js"></script>
+<script>
+"use strict";
+
+/* ===================== Speicher ===================== */
+const store = {
+  get(key, fallback) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+    catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+  }
+};
+
+let progress = store.get("vt-progress", {});     // id -> {box, due, right, wrong}
+let eigene   = store.get("vt-eigene", []);        // eigene Vokabeln
+let settings = store.get("vt-settings", { dir: "de-es", topics: [], size: 10, rate: 0.9 });
+let meta     = store.get("vt-meta", { streak: 0, lastDay: null });
+
+const save = () => {
+  store.set("vt-progress", progress); store.set("vt-eigene", eigene);
+  store.set("vt-settings", settings); store.set("vt-meta", meta);
+};
+
+const allWords = () => [...VOKABELN, ...eigene.map(w => ({ ...w, t: w.t || "Eigene Vokabeln" }))]
+  .map(w => ({ ...w, id: w.de + "→" + w.es }));
+const topics = () => [...new Set(allWords().map(w => w.t))];
+
+/* ===================== Leitner-System ===================== */
+// Box 0 = neu, Box 5 = sicher. Abstände in Tagen bis zur nächsten Wiederholung:
+const INTERVAL = [0, 1, 2, 4, 7, 14];
+const DAY = 86400000;
+const today = () => new Date().toISOString().slice(0, 10);
+
+function rate(word, correct) {
+  const p = progress[word.id] || { box: 0, due: 0, right: 0, wrong: 0 };
+  if (correct) { p.box = Math.min(5, p.box + 1); p.right++; }
+  else { p.box = 1; p.wrong++; }
+  p.due = Date.now() + INTERVAL[p.box] * DAY - 3600000; // 1h Puffer
+  progress[word.id] = p;
+
+  if (meta.lastDay !== today()) {
+    const yesterday = new Date(Date.now() - DAY).toISOString().slice(0, 10);
+    meta.streak = meta.lastDay === yesterday ? meta.streak + 1 : 1;
+    meta.lastDay = today();
+  }
+  save();
+}
+
+const isDue = w => !progress[w.id] || progress[w.id].due <= Date.now();
+const isLearned = w => progress[w.id] && progress[w.id].box >= 4;
+
+function selectedWords() {
+  const sel = settings.topics.filter(t => topics().includes(t));
+  return allWords().filter(w => !sel.length || sel.includes(w.t));
+}
+
+function buildSession() {
+  const words = selectedWords();
+  const shuffle = a => a.map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  const repeat = shuffle(words.filter(w => progress[w.id] && isDue(w))).sort((a, b) => progress[a.id].box - progress[b.id].box);
+  const fresh = shuffle(words.filter(w => !progress[w.id]));
+  let list = [...repeat, ...fresh];
+  if (!list.length) list = shuffle(words); // alles gelernt → freies Üben
+  return list.slice(0, settings.size);
+}
+
+/* ===================== Antwort prüfen ===================== */
+const stripAccents = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+const ARTICLES = /^(el|la|los|las|un|una|unos|unas|der|die|das|ein|eine|sich)\s+/;
+function norm(s) {
+  return s.toLowerCase().replace(/\(.*?\)/g, "").replace(/[¿?¡!.,;:"']/g, "")
+    .replace(/\s+/g, " ").trim().replace(ARTICLES, "");
+}
+function levenshtein(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+// Ergebnis: "ok" | "accent" (nur Akzent fehlt) | "typo" (1 Buchstabe falsch) | "wrong"
+function check(input, solution) {
+  const given = norm(input);
+  if (!given) return "wrong";
+  const options = solution.split("/").map(norm);
+  if (options.includes(given)) return "ok";
+  if (options.some(o => stripAccents(o) === stripAccents(given))) return "accent";
+  if (options.some(o => o.length >= 5 && levenshtein(stripAccents(o), stripAccents(given)) === 1)) return "typo";
+  return "wrong";
+}
+
+/* ===================== Sprachausgabe (Text-to-Speech) ===================== */
+let esVoice = null;
+function pickVoice() {
+  const voices = speechSynthesis.getVoices();
+  esVoice = voices.find(v => v.lang === "es-ES") || voices.find(v => v.lang.startsWith("es")) || null;
+}
+if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+
+function speak(text, lang = "es-ES") {
+  if (!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text.split("/")[0]);
+  u.lang = lang; u.rate = settings.rate;
+  if (lang.startsWith("es") && esVoice) u.voice = esVoice;
+  speechSynthesis.speak(u);
+}
+
+/* ===================== Spracheingabe (Speech-to-Text) ===================== */
+const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+function listen(onResult, onEnd) {
+  const r = new Recognition();
+  r.lang = "es-ES"; r.interimResults = false; r.maxAlternatives = 5;
+  r.onresult = e => onResult([...e.results[0]].map(a => a.transcript));
+  r.onerror = e => onEnd(e.error);
+  r.onend = () => onEnd(null);
+  r.start();
+  return r;
+}
+
+/* ===================== Hilfsfunktionen UI ===================== */
+const app = document.getElementById("app");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const $ = sel => app.querySelector(sel);
+const show = s => s.split("/").join(" / ");
+
+/* ===================== Startseite ===================== */
+function home() {
+  const words = allWords();
+  const learned = words.filter(isLearned).length;
+  const due = selectedWords().filter(w => progress[w.id] && isDue(w)).length;
+  const sel = settings.topics;
+
+  app.innerHTML = `
+    <header class="top"><h1>¡Vamos! <span>Vokabeln</span></h1>
+      <button class="icon-btn" id="btnEigene" aria-label="Eigene Vokabeln">✏️</button></header>
+
+    <div class="card stats">
+      <div><b>${words.length}</b><small>Wörter</small></div>
+      <div><b>${learned}</b><small>sicher</small></div>
+      <div><b>${due}</b><small>fällig</small></div>
+      <div><b>${meta.lastDay === today() || meta.lastDay === new Date(Date.now()-DAY).toISOString().slice(0,10) ? meta.streak : 0}🔥</b><small>Tage</small></div>
+    </div>
+
+    <h2>Richtung</h2>
+    <div class="seg">
+      <button data-dir="de-es" aria-pressed="${settings.dir === "de-es"}">Deutsch → Spanisch</button>
+      <button data-dir="es-de" aria-pressed="${settings.dir === "es-de"}">Spanisch → Deutsch</button>
+    </div>
+
+    <h2>Themen <small style="text-transform:none">(nichts gewählt = alle)</small></h2>
+    <div class="chips">
+      ${topics().map(t => {
+        const tw = words.filter(w => w.t === t);
+        const l = tw.filter(isLearned).length;
+        return `<button class="chip" data-topic="${esc(t)}" aria-pressed="${sel.includes(t)}">${esc(t)} <small>${l}/${tw.length}</small></button>`;
+      }).join("")}
+    </div>
+
+    <h2>Üben</h2>
+    <div class="modes">
+      <button class="mode" data-mode="karte"><div class="e">🃏</div><b>Karteikarten</b><small>Umdrehen & selbst bewerten</small></button>
+      <button class="mode" data-mode="schreiben"><div class="e">⌨️</div><b>Schreiben</b><small>Übersetzung eintippen</small></button>
+      <button class="mode" data-mode="auswahl"><div class="e">✅</div><b>Auswahl</b><small>1 aus 4 – zum Aufwärmen</small></button>
+      <button class="mode" data-mode="sprechen"><div class="e">🎤</div><b>Sprechen</b><small>Spanisch laut sagen</small></button>
+      <button class="mode" data-mode="hoeren"><div class="e">🎧</div><b>Hören</b><small>Diktat: hören & schreiben</small></button>
+      <button class="mode" data-mode="mix"><div class="e">🎲</div><b>Mix</b><small>Alles gemischt</small></button>
+    </div>
+    <p class="hint" style="text-align:center;margin-top:18px">Tipp: In Safari „Teilen“ → „Zum Home-Bildschirm“ – dann läuft der Trainer wie eine App.</p>
+  `;
+
+  app.querySelectorAll("[data-dir]").forEach(b => b.onclick = () => { settings.dir = b.dataset.dir; save(); home(); });
+  app.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => {
+    const t = b.dataset.topic;
+    settings.topics = sel.includes(t) ? sel.filter(x => x !== t) : [...sel, t];
+    save(); home();
+  });
+  app.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => startSession(b.dataset.mode));
+  $("#btnEigene").onclick = eigeneScreen;
+}
+
+/* ===================== Lern-Session ===================== */
+let session = null;
+
+function startSession(mode) {
+  const queue = buildSession();
+  if (!queue.length) { alert("Keine Wörter in dieser Auswahl."); return; }
+  session = { mode, queue, total: queue.length, done: 0, right: 0, wrongIds: new Set(), firstTry: new Set() };
+  next();
+}
+
+function next() {
+  if (!session.queue.length) return finish();
+  const word = session.queue[0];
+  let mode = session.mode;
+  if (mode === "mix") mode = ["karte", "schreiben", "auswahl", "sprechen", "hoeren"][Math.floor(Math.random() * 5)];
+  if (mode === "sprechen" && !Recognition && session.mode === "mix") mode = "schreiben";
+  renderQuestion(word, mode);
+}
+
+// Ergebnis einer Frage verarbeiten
+function answered(word, correct) {
+  if (!session.firstTry.has(word.id)) {     // nur der erste Versuch zählt fürs Leitner-System
+    session.firstTry.add(word.id);
+    rate(word, correct);
+    if (correct) session.right++;
+  }
+  session.queue.shift();
+  if (!correct) { session.wrongIds.add(word.id); session.queue.splice(Math.min(3, session.queue.length), 0, word); }
+  else session.done++;
+}
+
+function frame(inner) {
+  const pct = Math.round(session.done / session.total * 100);
+  app.innerHTML = `
+    <header class="top">
+      <button class="icon-btn" id="btnBack" aria-label="Beenden">✕</button>
+      <div class="progress"><i style="width:${pct}%"></i></div>
+      <small>${session.done}/${session.total}</small>
+    </header>
+    ${inner}`;
+  $("#btnBack").onclick = () => { window.speechSynthesis?.cancel(); home(); };
+}
+
+function renderQuestion(word, mode) {
+  // Sprechen & Hören zielen immer auf Spanisch
+  const dir = (mode === "sprechen" || mode === "hoeren") ? "de-es" : settings.dir;
+  const q = dir === "de-es" ? word.de : word.es;
+  const a = dir === "de-es" ? word.es : word.de;
+  const qLabel = dir === "de-es" ? "Deutsch" : "Spanisch";
+  const aLang = dir === "de-es" ? "Spanisch" : "Deutsch";
+  const speakBtn = `<button class="icon-btn" data-speak aria-label="Vorlesen">🔊</button>`;
+  const qIsEs = dir === "es-de";
+
+  const promptCard = `
+    <div class="card quiz">
+      <div class="label">${qLabel}</div>
+      <div class="word">${esc(show(q))}</div>
+      ${qIsEs ? speakBtn : ""}
+    </div>`;
+
+  const feedbackHtml = (res, extra = "") => {
+    const sol = `<span>${esc(show(a))}${word.ej ? ` · <i>${esc(word.ej)}</i>` : ""}</span>`;
+    if (res === "ok") return `<div class="feedback ok">¡Muy bien! 🎉${sol}</div>`;
+    if (res === "accent") return `<div class="feedback warn">Fast! Achte auf die Akzente.${sol}</div>`;
+    if (res === "typo") return `<div class="feedback warn">Knapp – ein Buchstabe stimmt nicht.${sol}</div>`;
+    return `<div class="feedback bad">Leider falsch.${extra}${sol}</div>`;
+  };
+
+  // nach dem Prüfen: Weiter-Knopf (+ „Ich hatte recht“ bei falsch)
+  const afterCheck = (res, extra) => {
+    const correct = res === "ok" || res === "accent";
+    $("#fb").innerHTML = feedbackHtml(res, extra) + `
+      <div class="row">
+        ${!correct ? `<button type="button" class="btn" id="override">Hatte ich doch richtig</button>` : ""}
+        <button type="button" class="btn primary" id="weiter">Weiter →</button>
+      </div>`;
+    speak(word.es);
+    $("#weiter").focus();
+    $("#weiter").onclick = () => { answered(word, correct); next(); };
+    if (!correct) $("#override").onclick = () => { answered(word, true); next(); };
+  };
+
+  const accentBar = `<div class="accents">${"á é í ó ú ñ ü ¿ ¡".split(" ").map(c => `<button type="button" data-acc="${c}">${c}</button>`).join("")}</div>`;
+  const bindSpeak = () => app.querySelectorAll("[data-speak]").forEach(b => b.onclick = () => speak(word.es));
+
+  /* ---------- Karteikarte ---------- */
+  if (mode === "karte") {
+    frame(`${promptCard}
+      <div id="back" class="card quiz hidden">
+        <div class="label">${aLang}</div>
+        <div class="answer">${esc(show(a))}</div>
+        ${word.ej ? `<div class="ej">${esc(word.ej)}</div>` : ""}
+        <div style="margin-top:10px">${speakBtn}</div>
+      </div>
+      <button class="btn primary block" id="flip">Umdrehen</button>
+      <div class="row hidden" id="rateRow">
+        <button class="btn bad" id="no">Nicht gewusst</button>
+        <button class="btn ok" id="yes">Gewusst</button>
+      </div>`);
+    bindSpeak();
+    if (qIsEs) speak(word.es);
+    $("#flip").onclick = () => {
+      $("#back").classList.remove("hidden"); $("#flip").classList.add("hidden"); $("#rateRow").classList.remove("hidden");
+      speak(word.es);
+    };
+    $("#yes").onclick = () => { answered(word, true); next(); };
+    $("#no").onclick = () => { answered(word, false); next(); };
+    return;
+  }
+
+  /* ---------- Schreiben & Hören (Diktat) ---------- */
+  if (mode === "schreiben" || mode === "hoeren") {
+    const hear = mode === "hoeren";
+    frame(`
+      ${hear ? `<div class="card quiz"><div class="label">Hör zu und schreib das spanische Wort</div>
+        <button class="mic" data-speak aria-label="Abspielen" style="font-size:36px">🔊</button>
+        <button class="btn" id="slow">🐢 langsam</button></div>` : promptCard}
+      <form id="f" autocomplete="off">
+        <input type="text" id="inp" placeholder="${aLang} …" autocapitalize="off" autocorrect="off" spellcheck="false" lang="${dir === "de-es" ? "es" : "de"}">
+        ${dir === "de-es" ? accentBar : ""}
+        <div id="fb"><button class="btn primary block" style="margin-top:10px">Prüfen</button></div>
+      </form>`);
+    bindSpeak();
+    if (hear) {
+      speak(word.es);
+      $("#slow").onclick = () => { const r = settings.rate; settings.rate = 0.55; speak(word.es); settings.rate = r; };
+    } else if (qIsEs) speak(word.es);
+    const inp = $("#inp");
+    setTimeout(() => inp.focus(), 50);
+    app.querySelectorAll("[data-acc]").forEach(b => b.onclick = () => {
+      const s = inp.selectionStart ?? inp.value.length;
+      inp.value = inp.value.slice(0, s) + b.dataset.acc + inp.value.slice(inp.selectionEnd ?? s);
+      inp.focus(); inp.setSelectionRange(s + 1, s + 1);
+    });
+    $("#f").onsubmit = e => {
+      e.preventDefault();
+      if (inp.readOnly) return $("#weiter")?.click();
+      inp.readOnly = true;
+      afterCheck(check(inp.value, a), inp.value ? ` <span>Deine Antwort: ${esc(inp.value)}</span>` : "");
+    };
+    return;
+  }
+
+  /* ---------- Multiple Choice ---------- */
+  if (mode === "auswahl") {
+    const pool = allWords().filter(w => w.id !== word.id);
+    const sameTopic = pool.filter(w => w.t === word.t);
+    const distractors = [...sameTopic.sort(() => Math.random() - .5), ...pool.sort(() => Math.random() - .5)]
+      .map(w => dir === "de-es" ? w.es : w.de).filter((x, i, arr) => x !== a && arr.indexOf(x) === i).slice(0, 3);
+    const options = [...distractors, a].sort(() => Math.random() - .5);
+    frame(`${promptCard}
+      <div class="choices">${options.map((o, i) => `<button class="btn" data-i="${i}">${esc(show(o))}</button>`).join("")}</div>
+      <div id="fb"></div>`);
+    bindSpeak();
+    if (qIsEs) speak(word.es);
+    app.querySelectorAll("[data-i]").forEach(b => b.onclick = () => {
+      const chosen = options[b.dataset.i];
+      app.querySelectorAll("[data-i]").forEach(x => {
+        x.disabled = true;
+        if (options[x.dataset.i] === a) x.classList.add("right");
+      });
+      if (chosen !== a) b.classList.add("wrong");
+      const res = chosen === a ? "ok" : "wrong";
+      $("#fb").innerHTML = feedbackHtml(res) + `<button class="btn primary block" id="weiter">Weiter →</button>`;
+      speak(word.es);
+      $("#weiter").onclick = () => { answered(word, res === "ok"); next(); };
+    });
+    return;
+  }
+
+  /* ---------- Sprechen ---------- */
+  if (mode === "sprechen") {
+    frame(`${promptCard}
+      <div class="card quiz" id="speakCard">
+        ${Recognition ? `
+          <button class="mic" id="mic" aria-label="Sprechen">🎤</button>
+          <div class="hint" id="micHint">Tippe aufs Mikrofon und sag das Wort auf Spanisch.</div>` : `
+          <div class="hint">Die Spracherkennung wird von diesem Browser nicht direkt unterstützt.<br>
+          Tippe ins Feld und nutze das 🎤 der iPhone-Tastatur (Diktat, Sprache Spanisch).</div>`}
+        <form id="f" autocomplete="off" style="margin-top:12px">
+          <input type="text" id="inp" placeholder="…oder hier eintippen / diktieren" lang="es" autocapitalize="off" autocorrect="off" spellcheck="false">
+        </form>
+      </div>
+      <div id="fb"></div>
+      <button class="btn block" id="skip">Lösung zeigen</button>`);
+    const inp = $("#inp");
+    const evaluate = (alternatives) => {
+      if ($("#weiter")) return;
+      $("#skip").classList.add("hidden");
+      // Bei Sprache sind Akzente egal – es zählt die beste Erkennung
+      const results = alternatives.map(t => check(t, a));
+      const best = ["ok", "accent", "typo", "wrong"].find(r => results.includes(r));
+      afterCheck(best === "accent" ? "ok" : best, ` <span>Verstanden: „${esc(alternatives[0] || "–")}“</span>`);
+    };
+    $("#f").onsubmit = e => { e.preventDefault(); if ($("#weiter")) return $("#weiter").click(); evaluate([inp.value]); };
+    $("#skip").onclick = () => evaluate([""]);
+    if (Recognition) {
+      $("#mic").onclick = () => {
+        const mic = $("#mic"); mic.classList.add("listening"); $("#micHint").textContent = "Ich höre zu …";
+        try {
+          listen(evaluate, err => {
+            mic?.classList.remove("listening");
+            if (err && $("#micHint")) $("#micHint").textContent = err === "not-allowed"
+              ? "Mikrofon nicht erlaubt – bitte in den Einstellungen freigeben oder ins Feld diktieren."
+              : "Nichts verstanden – nochmal versuchen oder ins Feld tippen.";
+            else if ($("#micHint") && !$("#weiter")) $("#micHint").textContent = "Tippe aufs Mikrofon und sag das Wort auf Spanisch.";
+          });
+        } catch { mic.classList.remove("listening"); }
+      };
+    }
+    bindSpeak();
+    if (qIsEs) speak(word.es);
+  }
+}
+
+function finish() {
+  const pct = Math.round(session.right / session.total * 100);
+  const emoji = pct >= 90 ? "🏆" : pct >= 70 ? "🎉" : pct >= 50 ? "💪" : "📚";
+  const wrong = allWords().filter(w => session.wrongIds.has(w.id));
+  app.innerHTML = `
+    <div class="big-emoji" style="margin-top:30px">${emoji}</div>
+    <h1 style="text-align:center;margin:6px 0">${pct >= 70 ? "¡Fenomenal!" : "¡Sigue así!"}</h1>
+    <p style="text-align:center" class="hint">${session.right} von ${session.total} beim ersten Versuch richtig</p>
+    ${wrong.length ? `<h2>Diese Wörter nochmal anschauen</h2>
+      <div class="list">${wrong.map(w => `<div class="item"><div><b>${esc(show(w.es))}</b><br><small>${esc(show(w.de))}</small></div>
+        <button class="icon-btn" data-say="${esc(w.es)}">🔊</button></div>`).join("")}</div>` : ""}
+    <div class="row" style="margin-top:20px">
+      <button class="btn" id="home">Startseite</button>
+      <button class="btn primary" id="again">Noch eine Runde</button>
+    </div>`;
+  app.querySelectorAll("[data-say]").forEach(b => b.onclick = () => speak(b.dataset.say));
+  $("#home").onclick = home;
+  $("#again").onclick = () => startSession(session.mode);
+}
+
+/* ===================== Eigene Vokabeln ===================== */
+function eigeneScreen() {
+  app.innerHTML = `
+    <header class="top"><button class="icon-btn" id="btnBack" aria-label="Zurück">←</button><h1>Eigene Vokabeln</h1></header>
+    <div class="card">
+      <p style="margin-top:0">Vokabeln aus dem Schulbuch eintragen – <b>eine pro Zeile</b>, Deutsch und Spanisch mit <b>=</b> getrennt:</p>
+      <textarea id="txt" placeholder="der Hund = el perro&#10;das Haus = la casa&#10;schnell = rápido/deprisa"></textarea>
+      <input type="text" id="topic" placeholder="Thema, z. B. Lektion 3" style="margin-top:10px;font-size:17px">
+      <button class="btn primary block" id="add" style="margin-top:10px">Hinzufügen</button>
+      <div id="msg" class="hint" style="margin-top:8px"></div>
+    </div>
+    <h2>Bisher eingetragen (${eigene.length})</h2>
+    <div class="list">${eigene.map((w, i) => `<div class="item"><div><b>${esc(show(w.es))}</b> – ${esc(show(w.de))}<br><small class="hint">${esc(w.t)}</small></div>
+      <button class="icon-btn" data-del="${i}" aria-label="Löschen">🗑️</button></div>`).join("") || `<p class="hint">Noch keine.</p>`}</div>
+    <h2>Fortschritt</h2>
+    <button class="btn block" id="reset">Lernstand zurücksetzen</button>`;
+  $("#btnBack").onclick = home;
+  $("#add").onclick = () => {
+    const t = $("#topic").value.trim() || "Eigene Vokabeln";
+    const lines = $("#txt").value.split("\n").map(l => l.split("=")).filter(p => p.length === 2 && p[0].trim() && p[1].trim());
+    lines.forEach(([de, es]) => eigene.push({ de: de.trim(), es: es.trim(), t }));
+    save();
+    eigeneScreen();
+    $("#msg").textContent = lines.length ? `${lines.length} Vokabel(n) hinzugefügt.` : "Nichts erkannt – Format: deutsch = spanisch";
+  };
+  app.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { eigene.splice(+b.dataset.del, 1); save(); eigeneScreen(); });
+  $("#reset").onclick = () => { if (confirm("Wirklich den ganzen Lernstand löschen?")) { progress = {}; meta = { streak: 0, lastDay: null }; save(); home(); } };
+}
+
+/* ===================== Start ===================== */
+home();
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
