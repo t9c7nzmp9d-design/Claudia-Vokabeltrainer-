@@ -24,3 +24,10 @@ Läuft im Browser und lässt sich auf dem iPhone über Safari → „Teilen“ �
 python3 -m http.server 8000
 ```
 → http://localhost:8000 öffnen. Fürs iPhone muss die App über **HTTPS** erreichbar sein (z. B. GitHub Pages).
+
+## Festlegungen & Planung
+- **Sprachvariante:** Spanisch aus Spanien (Stimme & Spracherkennung `es-ES`, Wortschatz z. B. *móvil*, *piso*, *deberes*)
+- **Hosting:** GitHub Pages aus dem Branch `main`
+- **Speicherung:** Lernstand nur auf dem jeweiligen Gerät (kein Konto, kein Server)
+- **Offen:** Wortschatz passend zum Schulbuch (Lehrwerk & Lektion folgen)
+- **Später:** Verbkonjugation, weitere Sprachen
