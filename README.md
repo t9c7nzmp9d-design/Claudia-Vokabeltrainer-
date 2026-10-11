@@ -11,6 +11,7 @@ Läuft im Browser und lässt sich auf dem iPhone über Safari → „Teilen“ �
 - Fehlertolerante Prüfung: fehlender Akzent = „fast richtig“, Tippfehler wird erkannt, Artikel optional, mehrere richtige Lösungen
 - Themenauswahl, Lernrichtung DE→ES / ES→DE, Fortschritt, Lernserie (🔥 Tage)
 - **Vokabellisten scannen:** über „Text scannen“ des iPhones (Live Text, läuft auf dem Gerät) – die App trennt Spanisch/Deutsch automatisch, erkennt die Spaltenreihenfolge und zeigt eine Vorschau zum Korrigieren
+- **Datensicherung:** Lernstand, eigene Vokabeln & Einstellungen als Datei speichern (iPhone: Teilen → „In Dateien sichern“) und wieder laden
 - **Eigene Vokabeln** abtippen oder einfügen (eine pro Zeile, z. B. `el perro = der Hund`)
 
 ## Dateien

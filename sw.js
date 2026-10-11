@@ -1,5 +1,5 @@
 // Service Worker: macht die App offline nutzbar (App-Shell wird zwischengespeichert)
-const CACHE = "vokabeltrainer-v6";
+const CACHE = "vokabeltrainer-v7";
 const FILES = [
   "./",
   "./index.html",

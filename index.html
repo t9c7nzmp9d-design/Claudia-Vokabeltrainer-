@@ -640,6 +640,16 @@ function eigeneScreen() {
     <h2>Bisher eingetragen (${eigene.length})</h2>
     <div class="list">${eigene.map((w, i) => `<div class="item"><div><b>${esc(show(w.es))}</b> – ${esc(show(w.de))}<br><small class="hint">${esc(w.t)}</small></div>
       <button class="icon-btn" data-del="${i}" aria-label="Löschen">🗑️</button></div>`).join("") || `<p class="hint">Noch keine.</p>`}</div>
+    <h2>Datensicherung</h2>
+    <div class="card">
+      <p class="hint" style="margin-top:0">Speichert Lernstand, eigene Vokabeln und Einstellungen als Datei
+      (z. B. in „Dateien“ oder iCloud Drive). Damit kannst du alles wiederherstellen – auch auf einem neuen Handy.<br>
+      <b>Letzte Sicherung:</b> ${meta.lastBackup ? new Date(meta.lastBackup).toLocaleDateString("de-DE") : "noch keine"}</p>
+      <button class="btn primary block" id="backup">💾 Sicherung speichern</button>
+      <button class="btn block" id="restore" style="margin-top:10px">📂 Sicherung laden</button>
+      <input type="file" id="restoreFile" accept=".json,application/json" class="hidden">
+      <div id="backupMsg" class="hint" style="margin-top:8px"></div>
+    </div>
     <h2>Einstellungen & Daten</h2>
     <button class="btn block" id="reset">Lernstand zurücksetzen</button>
     <button class="btn block" id="wipe" style="margin-top:10px">Alle Daten auf diesem Gerät löschen</button>
@@ -658,6 +668,9 @@ function eigeneScreen() {
     if (window.caches) caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
     location.reload();
   };
+  $("#backup").onclick = () => saveBackup(isIOS);
+  $("#restore").onclick = () => $("#restoreFile").click();
+  $("#restoreFile").onchange = e => { const f = e.target.files[0]; if (f) loadBackup(f); e.target.value = ""; };
   $("#reset").onclick = () => { if (confirm("Wirklich den ganzen Lernstand löschen?")) { progress = {}; meta = { streak: 0, lastDay: null }; save(); home(); } };
 }
 
@@ -699,6 +712,53 @@ function renderPreview() {
     eigeneScreen();
     $("#msg").textContent = `${neu.length} Vokabel(n) unter „${t}“ gespeichert.`;
   };
+}
+
+/* ===================== Datensicherung ===================== */
+async function saveBackup(isIOS) {
+  meta.lastBackup = Date.now(); save();
+  const data = { app: "luna-vokabeltrainer", version: 1, created: new Date().toISOString(), progress, eigene, settings, meta };
+  const name = `luna-sicherung-${today()}.json`;
+  const blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
+  let text;
+  // iPhone: Teilen-Menü → „In Dateien sichern“; sonst normaler Download
+  const file = new File([blob], name, { type: "application/json" });
+  if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: "Luna – Datensicherung" }); text = "Sicherung erstellt. ✅"; }
+    catch (e) { text = e.name === "AbortError" ? "Abgebrochen – Tipp: im Teilen-Menü „In Dateien sichern“ wählen." : "Teilen nicht möglich: " + e.message; }
+  } else {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    text = `Sicherung „${name}“ wurde gespeichert (Downloads). ✅`;
+  }
+  eigeneScreen();
+  $("#backupMsg").textContent = text;
+}
+
+function loadBackup(file) {
+  const msg = t => { const m = $("#backupMsg"); if (m) m.textContent = t; };
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); } catch { return msg("Das ist keine gültige Sicherungsdatei."); }
+    if (!data || data.app !== "luna-vokabeltrainer" || typeof data.progress !== "object" || !Array.isArray(data.eigene)) {
+      return msg("Diese Datei ist keine Luna-Sicherung.");
+    }
+    const datum = data.created ? new Date(data.created).toLocaleString("de-DE") : "unbekannt";
+    const gelernt = Object.keys(data.progress).length;
+    if (!confirm(`Sicherung vom ${datum} laden?\n\n• ${gelernt} geübte Wörter\n• ${data.eigene.length} eigene Vokabeln\n\nDer aktuelle Stand auf diesem Gerät wird dabei ersetzt.`)) return;
+    progress = data.progress;
+    eigene = data.eigene.filter(w => w && typeof w.de === "string" && typeof w.es === "string");
+    settings = { ...settings, ...(data.settings || {}) };
+    meta = { streak: 0, lastDay: null, ...(data.meta || {}) };
+    save();
+    eigeneScreen();
+    msg(`Sicherung vom ${datum} wurde geladen. ✅`);
+  };
+  reader.onerror = () => msg("Datei konnte nicht gelesen werden.");
+  reader.readAsText(file);
 }
 
 /* ===================== Start ===================== */
