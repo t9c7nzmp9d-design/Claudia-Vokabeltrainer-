@@ -311,7 +311,7 @@ function home() {
     <footer class="hint" style="text-align:center;margin-top:24px;font-size:13px">
       Private, nicht-kommerzielle Seite · keine Werbung, kein Tracking, keine Cookies<br>
       <a href="datenschutz.html">Datenschutz</a> ·
-      <a href="https://github.com/t9c7nzmp9d-design/Claudia-Vokabeltrainer-/blob/main/README.md" target="_blank" rel="noopener">Über Luna (README)</a></footer>
+      <a href="readme.html">Über Luna (README)</a></footer>
   `;
 
   app.querySelectorAll("[data-level]").forEach(b => b.onclick = () => {
@@ -765,7 +765,7 @@ function loadBackup(file) {
 /* ===================== Start ===================== */
 home();
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(r => r.update()).catch(() => {});
 }
 </script>
 </body>

@@ -1,6 +1,6 @@
-# ¡Vamos! – Vokabeltrainer Spanisch
+# 🌙 Luna – Vokabeltrainer Spanisch
 
-Webbasierter Vokabeltrainer für Schüler:innen (Klasse 9, 3.–4. Lernjahr Spanisch).
+Webbasierter Vokabeltrainer für Schüler:innen (Lernjahr 1 bis 4, Spanisch aus Spanien).
 Läuft im Browser und lässt sich auf dem iPhone über Safari → „Teilen“ → „Zum Home-Bildschirm“ wie eine App installieren (PWA, funktioniert auch offline).
 
 ## Funktionen
@@ -20,6 +20,7 @@ Läuft im Browser und lässt sich auf dem iPhone über Safari → „Teilen“ �
 | `index.html` | die komplette App |
 | `grundwortschatz.js` | Grundwortschatz Lernjahr 1 & 2 (ca. 270 Wörter, 18 Themen) |
 | `vokabeln.js` | Wortschatz Lernjahr 3+ (leicht erweiterbar) |
+| `readme.html` | zeigt diese README direkt in der App an („Über Luna“) |
 | `datenschutz.html` | Datenschutzhinweise, Widerruf der Spracherkennung, Daten löschen |
 | `manifest.json`, `sw.js`, `icons/` | Installierbarkeit & Offline-Betrieb |
 

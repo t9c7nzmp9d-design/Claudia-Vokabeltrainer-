@@ -1,9 +1,11 @@
 // Service Worker: macht die App offline nutzbar (App-Shell wird zwischengespeichert)
-const CACHE = "vokabeltrainer-v8";
+const CACHE = "vokabeltrainer-v9";
 const FILES = [
   "./",
   "./index.html",
   "./datenschutz.html",
+  "./readme.html",
+  "./README.md",
   "./grundwortschatz.js",
   "./vokabeln.js",
   "./manifest.json",
@@ -28,14 +30,18 @@ self.addEventListener("activate", (e) => {
 
 // Netzwerk zuerst (damit Updates ankommen), bei Offline aus dem Cache
 self.addEventListener("fetch", (e) => {
-  if (e.request.method !== "GET") return;
+  const url = new URL(e.request.url);
+  if (e.request.method !== "GET" || url.origin !== location.origin) return;
   e.respondWith(
-    fetch(e.request)
+    // no-cache: immer beim Server nachfragen, ob es eine neue Version gibt
+    fetch(url.href, { cache: "no-cache" })
       .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy));
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(e.request, copy));
+        }
         return res;
       })
-      .catch(() => caches.match(e.request))
+      .catch(() => caches.match(e.request, { ignoreSearch: true }))
   );
 });

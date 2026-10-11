@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Über Luna</title>
+<meta name="theme-color" content="#c62828">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=luna">
+<style>
+  :root { --bg: #fdf8f2; --card: #fff; --text: #2a2321; --muted: #7a6f6a; --line: #eadfd4; --brand: #c62828; --code: #f3ebe3; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1b1716; --card: #26201e; --text: #f3ece8; --muted: #b0a49e; --line: #3a312e; --brand: #ef5350; --code: #332b28; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 16px 16px 40px; }
+  a { color: var(--brand); }
+  .back { display: inline-block; margin: 8px 0 12px; font-weight: 600; text-decoration: none; }
+  h1 { font-size: 26px; margin: 8px 0 12px; }
+  h2 { font-size: 19px; margin: 28px 0 8px; }
+  h3 { font-size: 17px; margin: 20px 0 6px; }
+  ul { padding-left: 22px; }
+  li { margin: 3px 0; }
+  code { background: var(--code); border-radius: 6px; padding: 1px 5px; font-size: 14px; }
+  pre { background: var(--code); border-radius: 10px; padding: 10px 12px; overflow-x: auto; }
+  pre code { padding: 0; background: none; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; background: var(--card); }
+  th, td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: var(--code); }
+  .muted { color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="index.html">← Zurück zu Luna</a>
+  <div id="content"><p class="muted">README wird geladen …</p></div>
+  <p class="muted" id="stand"></p>
+  <p><a href="index.html">← Zurück zu Luna</a></p>
+</main>
+<script>
+"use strict";
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// Text innerhalb einer Zeile: `code`, **fett**, *kursiv*, [Link](url)
+function inline(s) {
+  const codes = [];
+  s = esc(s).replace(/`([^`]+)`/g, (_, c) => { codes.push(c); return `\u0000${codes.length - 1}\u0000`; });
+  s = s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+       .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<i>$2</i>")
+       .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, t, u) =>
+         `<a href="${u}"${/^https?:/.test(u) ? ' target="_blank" rel="noopener"' : ""}>${t}</a>`);
+  return s.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${codes[i]}</code>`);
+}
+
+// Kleiner Markdown-Umwandler für die README (Überschriften, Listen, Tabellen, Code, Absätze)
+function markdown(md) {
+  const lines = md.replace(/\r/g, "").split("\n");
+  let html = "", i = 0;
+  const cells = l => l.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+  while (i < lines.length) {
+    const l = lines[i];
+    if (/^```/.test(l)) {
+      const buf = []; i++;
+      while (i < lines.length && !/^```/.test(lines[i])) buf.push(lines[i++]);
+      html += `<pre><code>${esc(buf.join("\n"))}</code></pre>`; i++; continue;
+    }
+    const h = l.match(/^(#{1,3})\s+(.*)/);
+    if (h) { html += `<h${h[1].length}>${inline(h[2])}</h${h[1].length}>`; i++; continue; }
+    if (/^\s*\|/.test(l)) {
+      const rows = [];
+      while (i < lines.length && /^\s*\|/.test(lines[i])) rows.push(lines[i++]);
+      const body = rows.filter(r => !/^\s*\|?\s*:?-{2,}/.test(r));
+      html += `<div class="table-wrap"><table><tr>${cells(body[0]).map(c => `<th>${inline(c)}</th>`).join("")}</tr>` +
+        body.slice(1).map(r => `<tr>${cells(r).map(c => `<td>${inline(c)}</td>`).join("")}</tr>`).join("") + "</table></div>";
+      continue;
+    }
+    if (/^\s*[-*]\s+/.test(l)) {
+      html += "<ul>";
+      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) html += `<li>${inline(lines[i++].replace(/^\s*[-*]\s+/, ""))}</li>`;
+      html += "</ul>"; continue;
+    }
+    if (!l.trim()) { i++; continue; }
+    const para = [];
+    while (i < lines.length && lines[i].trim() && !/^(#{1,3}\s|```|\s*\||\s*[-*]\s)/.test(lines[i])) para.push(lines[i++]);
+    html += `<p>${inline(para.join(" "))}</p>`;
+  }
+  return html;
+}
+
+// Immer die aktuellste Fassung vom Server holen, offline die zwischengespeicherte
+fetch("README.md", { cache: "no-cache" })
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+  .then(md => {
+    document.getElementById("content").innerHTML = markdown(md);
+    document.getElementById("stand").innerHTML =
+      `Die README liegt auch auf <a href="https://github.com/t9c7nzmp9d-design/Claudia-Vokabeltrainer-/blob/main/README.md" target="_blank" rel="noopener">GitHub</a>.`;
+  })
+  .catch(() => {
+    document.getElementById("content").innerHTML =
+      `<p>Die README konnte gerade nicht geladen werden – bitte mit Internetverbindung erneut öffnen.</p>`;
+  });
+</script>
+</body>
+</html>
