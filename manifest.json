@@ -1,10 +1,10 @@
 {
-  "name": "¡Vamos! Vokabeltrainer Spanisch",
-  "short_name": "Vokabeln",
+  "name": "Luna – Vokabeltrainer Spanisch",
+  "short_name": "Luna",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#fdf8f2",
+  "background_color": "#1a2356",
   "theme_color": "#c62828",
   "lang": "de",
   "icons": [
